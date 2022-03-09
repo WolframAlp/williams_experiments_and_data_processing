@@ -1397,7 +1397,7 @@ class CurrentMonitor(Experiment):
     
     '''
 
-    def __init__(self, volt):
+    def __init__(self, volt, show_seconds=10):
 
         # Creates Experiment class and connects to power supply
         super().__init__(volt=volt)
@@ -1408,12 +1408,19 @@ class CurrentMonitor(Experiment):
                             directory="DontNeedOne")
         self.run = True
         
-    def start(self):
+        self.show_seconds = int(show_seconds)
+        
+    def start(self, show_seconds=None):
         '''Starts the monitor'''
-
+        
         # Checks if ready
         self.check_readyness()
         
+        if show_seconds is None:
+            show_seconds = self.show_seconds
+        else:
+            show_seconds = int(show_seconds)
+
         print("Ramping up voltage")
 
         # Loops though channels and makes sure they are turned on
@@ -1436,7 +1443,7 @@ class CurrentMonitor(Experiment):
         self.fig.canvas.draw()
         self.time = [0]
         self.current = [0]
-        self.point_limit = 50
+        self.point_limit = show_seconds*5
         
         # Loops while running
         while self.run:
@@ -1450,8 +1457,8 @@ class CurrentMonitor(Experiment):
             self.time.append(self.time[-1]+1)
 
             self.ax.clear()
-            if len(self.current) >= 50:
-                self.ax.plot(self.time[-50:], self.current[-50:])
+            if len(self.current) >= self.point_limit:
+                self.ax.plot(self.time[-self.point_limit:], self.current[-self.point_limit:])
             else:
                 self.ax.plot(self.time, self.current)
             self.fig.canvas.draw()
