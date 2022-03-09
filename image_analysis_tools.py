@@ -76,11 +76,17 @@ class ImageSeries:
                     if part == 'img':
                         imag = split[i+1]
                     elif part == 'pos':
-                        p = int(split[i+1]) # Does not work with int for energy considerations
+                        if split[i+1] == "0.0":
+                            p = 0
+                            os.rename(f"img_{split[1]}_pos_{split[3]}_{split[4]}", f"img_{split[1]}_pos_0_{split[4]}")
+                        else:
+                            p = int(float(split[i+1])) # Does not work with int for energy considerations
                         if p not in self.positions:
                             self.positions.append(p)
                     elif part.startswith("volt"):
                         v = part.split(".")
+                        if len(v) > 2:
+                            os.rename(f"img_{split[1]}_pos_{split[3]}_{split[4]}", f"img_{split[1]}_pos_{split[3]}_{v[0]}.{v[-1]}")
                         v = int(v[0][4:])
                         if v not in self.voltages:
                             self.voltages.append(v)
