@@ -5,6 +5,7 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.signal import find_peaks
+from scipy.interpolate import interp1d
 
 from scipy.ndimage import gaussian_filter, median_filter
 
@@ -349,13 +350,14 @@ class AngleSlice:
     '''Holds infomation on pixels in specific area of opening angle
     given in the CImage, set as step'''
 
-    def __init__(self, data, center, lower=0, step=5, assignment="binary"):
+    def __init__(self, data, center, lower=0, step=5, assignment="binary", binnings=50):
         self.step = step
         self.assignment = assignment.lower()
         self.lower = lower
         self.upper = lower + step
         self.lower_rad = lower * np.pi / 180
         self.upper_rad = self.upper * np.pi / 180
+        self.binnings = 50
 
         if (self.lower >= 45 and self.lower <= 135) or (self.lower >= 225 and self.lower <= 315):
             self.sweep = 'y'
@@ -459,7 +461,7 @@ class AngleSlice:
             self.yls = np.array(self.yls)
             self.numX = abs(xval)
         self.intensities = self.intensities[21:]
-
+        self._generate_binnings(self.binnings)
 
     def __str__(self):
         return f"Center : {(self.lower + self.upper)/2} degrees"
@@ -472,7 +474,7 @@ class AngleSlice:
         plt.plot(np.arange(len(self.intensities)), self.intensities)
         plt.xlabel("Pixel number -20")
         plt.ylabel("Intensity Average")
-        plt.show
+        plt.show()
     
     def get_peak_centers(self, prominence=1, plot=False, width=5, distance=5):
         
@@ -488,3 +490,17 @@ class AngleSlice:
     
     def get_total_intensity(self):
         return sum(self.intensities)
+
+    def _generate_binnings(self, bins):
+        n_points = len(self.intensities)
+        interpolated = interp1d(np.arange(n_points), self.intensities)
+        bin_width = n_points/2/bins
+        self.bin_positions = np.array([i*bin_width for i in np.arange(1,2*bins-1,2)])
+        self.bin_vals = np.array([np.mean(interpolated(np.arange(b-bin_width, b+bin_width, bin_width/10))) for b in self.bin_positions])
+
+    def plot_bins(self):
+        plt.figure()
+        plt.plot(self.bin_positions, self.bin_vals)
+        plt.xlabel("Pixel number -20")
+        plt.ylabel("Intensity Average")
+        plt.show()
