@@ -2,6 +2,31 @@ import numpy as np
 from emission_curves import EmissionCurve
 import matplotlib.pyplot as plt
 from matplotlib import cm
+from scipy.interpolate import interp2d
+
+class MapBook:
+    
+    def __init__(self, Es):
+        self.Es = Es
+        self.maps = {}
+        self.generate_maps(Es)
+    
+    def generate_maps(self, Es):
+        for e in Es:
+            self.maps[e] = EMap(e)
+            print(f"Map {e} generated")
+
+    def plot_map(self, e):
+        self.maps[e].show_3dmap()
+
+    def __getitem__(self, item):
+        return self.maps[item]
+
+    def __str__(self):
+        return f"MapBook containing {len(self.maps)} maps"
+
+    def __repr__(self):
+        return self.__str__()
 
 class Map:
 
@@ -37,13 +62,19 @@ class EMap(Map):
         super().__init__()
 
         # Define radii and generate emission curves
-        self.rs = np.linspace(1e-7,2e-3,301)
+        self.rs = np.linspace(1e-7,2e-3,51)
         self.curves = [EmissionCurve(E=e,r=r) for r in self.rs]
 
         # Extract the angles and maps from the curves
         self.angles = self.extract_angle()
         self.map = self.extract_map()
         self.logmap = np.log(self.map)
+
+        radii = np.array([self.rs for i in range(len(self.angles))]).T
+        self.intermap = interp2d(radii, self.angles, self.map)
+        
+    def get_value(self, r, theta):
+        return self.intermap(r,theta)
 
     def show_3dmap(self):
         # Create figure
@@ -58,6 +89,21 @@ class EMap(Map):
         ax.zaxis.set_major_formatter('{x:.02f}')
         fig.colorbar(surf, shrink=0.5, aspect=5)
         plt.show()
+
+    def get_allowed_angles(self, r):
+        
+        lower_limit = np.min(self.angles)
+        upper_limit = np.max(self.angles)
+        angs = np.linspace(lower_limit, upper_limit, 201)
+        for ang in angs:
+            if self.intermap(r,ang) != 0:
+                lower_limit = ang
+                break
+        for ang in reversed(angs):
+             if self.intermap(r,ang) != 0:
+                upper_limit = ang
+                break
+        return lower_limit, upper_limit
         
     def show_map(self):
         plt.figure()
