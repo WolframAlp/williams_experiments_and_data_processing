@@ -34,7 +34,7 @@ class PowerSupply:
         else:
             # Default ip
             # Might change when moving the device due to router asignment
-            connectionParameters = "ws://192.168.1.4:8080"
+            connectionParameters = "ws://192.168.1.2:8080"
 
         # Make connection        
         self.connection = clientCommon.establishConnection(icsClient, connectionName, connectionParameters, connectionLogin, connectionPassword)

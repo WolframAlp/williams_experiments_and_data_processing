@@ -63,7 +63,7 @@ class Camera:
             self.snapshot.format = self.snapshotformat
         self.snapshot.exposure = exposure
         self.snapshot.gain = 1
-        self.snapshot.timeout = 1000.0
+        self.snapshot.timeout = 2000.0
         self.snapshot.gainRed = 1.0
         self.snapshot.gainBlue = 1.0
         self.snapshot.gainGrn1 = 1.0

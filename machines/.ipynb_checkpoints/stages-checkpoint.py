@@ -12,11 +12,11 @@ lib = cdll.LoadLibrary("Thorlabs.MotionControl.KCube.DCServo.dll")
 lib.TLI_BuildDeviceList()
 
 #set up serial number variable
-serial_rot_1 = c_char_p(b'83825283')
-serial_rot_2 = c_char_p(b'83827937')
-serial_z = c_char_p(b'27255894')
-serial_x = c_char_p(b'27256338')
-serial_y = c_char_p(b'27255354')
+serial_rot_1 = c_char_p(b'27005004')
+serial_rot_2 = c_char_p(b'27255354') #83827937
+serial_z = c_char_p(b'27004364')
+serial_x = c_char_p(b'27255894')
+serial_y = c_char_p(b'27256338')
 
 class PMT_Scanner:
     '''Class for interacting with a stage'''
@@ -26,7 +26,7 @@ class PMT_Scanner:
                  path=None,
                  save_file=False,
                  HomeStages=False,
-                 serialNum=c_char_p(b'83825283')):
+                 serialNum=c_char_p(b'27255354')):
 
         # Sets variouse parameters
         self.serialNum = serialNum
