@@ -24,7 +24,10 @@ class EmissionCurve:
         self.E = E
         
         if angles is None:
-            self.angles = np.linspace(0,np.arctan(self.d/r), 53)[1:-1]
+            if E < 0:
+                self.angles = np.linspace(np.arctan(self.d/r), np.pi/2, 53)[1:-1]
+            else:
+                self.angles = np.linspace(0,np.arctan(self.d/r), 53)[1:-1]
         else:
             self.angles = angles * np.pi / 180
 
@@ -37,7 +40,8 @@ class EmissionCurve:
             E = self.E
         if angles is None:
             angles = self.angles
-        return (self.q*E*r**2) / (4*((np.cos(angles))**2) * (self.d - np.tan(angles)*r))
+        # return -(self.q*E*r**2) / (4*((np.cos(angles))**2) * (self.d - np.tan(angles)*r))
+        return -(self.q*E*r**2) / (4*np.cos(angles)*(self.d*np.cos(angles) - r*np.sin(angles)))
 
     def plot_curve(self, angles=None, curve=None):
         if angles is None:

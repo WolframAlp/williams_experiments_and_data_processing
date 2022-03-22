@@ -61,6 +61,7 @@ class EMap(Map):
     def __init__(self, e):
         super().__init__()
 
+        self.e = e
         # Define radii and generate emission curves
         self.rs = np.linspace(1e-7,2e-3,51)
         self.curves = [EmissionCurve(E=e,r=r) for r in self.rs]
@@ -68,10 +69,11 @@ class EMap(Map):
         # Extract the angles and maps from the curves
         self.angles = self.extract_angle()
         self.map = self.extract_map()
-        self.logmap = np.log(self.map)
+        self.logmap = np.log10(self.map)
 
-        radii = np.array([self.rs for i in range(len(self.angles))]).T
-        self.intermap = interp2d(radii, self.angles, self.map)
+        self.radii = np.array([self.rs for i in range(len(self.angles))]).T
+        self.intermap = interp2d(self.radii, self.angles, self.map)
+        self.rangemap = interp2d(self.map, self.angles, self.radii)
         
     def get_value(self, r, theta):
         return self.intermap(r,theta)
@@ -84,26 +86,39 @@ class EMap(Map):
         radii = np.array([self.rs for i in range(len(self.angles))])
         
         # Plot surface
-        surf = ax.plot_surface(self.angles*180/np.pi, radii, self.logmap, cmap=cm.coolwarm,
+        surf = ax.plot_surface(self.angles.T*180/np.pi, radii, self.logmap, cmap=cm.coolwarm,
                                linewidth=0, antialiased=False)
         ax.zaxis.set_major_formatter('{x:.02f}')
         fig.colorbar(surf, shrink=0.5, aspect=5)
         plt.show()
 
-    def get_allowed_angles(self, r):
+    def show_3dmap_range(self):
+        # Create figure
+        fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
         
-        lower_limit = np.min(self.angles)
-        upper_limit = np.max(self.angles)
-        angs = np.linspace(lower_limit, upper_limit, 201)
-        for ang in angs:
-            if self.intermap(r,ang) != 0:
-                lower_limit = ang
-                break
-        for ang in reversed(angs):
-             if self.intermap(r,ang) != 0:
-                upper_limit = ang
-                break
-        return lower_limit, upper_limit
+        # Make grid of radii
+        radii = np.array([self.rs for i in range(len(self.angles))])
+        
+        # Plot surface
+        surf = ax.plot_surface(self.logmap, self.angles.T*180/np.pi, radii, cmap=cm.coolwarm,
+                               linewidth=0, antialiased=False)
+        ax.zaxis.set_major_formatter('{x:.02f}')
+        fig.colorbar(surf, shrink=0.5, aspect=5)
+        plt.show()
+
+    def get_range_distribution(self, distribution):
+        ranges = []
+        for values in distribution.values():
+            for v in values:
+                ranges.append(self.rangemap(v[1],v[0])[0])
+        return ranges
+
+    def get_allowed_angles(self, r):
+        if self.e < 0:
+            angles = np.linspace(np.arctan(1e-3/r), np.pi/2, 53)[1:-1]
+        else:
+            angles = np.linspace(0,np.arctan(1e-3/r), 53)[1:-1]
+        return min(angles), max(angles)
         
     def show_map(self):
         plt.figure()

@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from scipy.signal import find_peaks
 from scipy.interpolate import interp1d
+import random
 
 from scipy.ndimage import gaussian_filter, median_filter
 
@@ -187,11 +188,10 @@ class ImageSeries:
     def get_image_by_potential(self, V):
         '''Takes potential as input and outputs image as array'''
 
-        if type(V) is int or type(V) is float:
-            V = str(V)
-
-        if V in self.others_names:
-            return self.others_data[V]
+        name = f"pos_0_volt{1500+V}"
+        
+        if name in self.others_names:
+            return self.others[name]
         else:
             print("Image was not found")
             return None
@@ -504,3 +504,21 @@ class AngleSlice:
         plt.xlabel("Pixel number -20")
         plt.ylabel("Intensity Average")
         plt.show()
+
+    def generate_distribution(self, map, scale=10, pixel_to_meters=2.2e-6):
+        
+        bin_vals = np.round(self.bin_vals*scale,0).astype(int)
+        bin_positions = (self.bin_positions + 20) * pixel_to_meters
+
+        angles, energies = [],[]
+        distribution = {}
+        for i, r in enumerate(bin_positions):
+            distribution[r] = []
+            low_a, high_a = map.get_allowed_angles(r)
+            for el in range(bin_vals[i]):
+                angle = random.uniform(low_a, high_a)
+                energy = map.intermap(r, angle)[0]
+                angles.append(angle)
+                energies.append(energy)
+                distribution[r].append((angle,energy))
+        return angles, energies, distribution
